@@ -163,6 +163,10 @@ export default {
         EventHub.$emit('updateSidebarAlerts', data);
         EventHub.$emit('updateAlertsList', data);
       });
+      this.$hub.onclose(() => {
+        this.$hub.isClosed = true;
+        this.$hub.reconnect(this.token, this.pair).then(() => this.hubSubscribe());
+      });
     },
   },
   watch: {
@@ -175,12 +179,14 @@ export default {
         );
     },
     token() {
-      if (this.token) {
+      if (this.token && !this.$hub.isClosed) {
         this.$hub.invokeByStart.then(
           (connection) => {
             connection.invoke('authenticate', this.token);
           }
         );
+      } else {
+        this.$hub.stop();
       }
     },
     showSidebar() {
